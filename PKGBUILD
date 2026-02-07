@@ -1,4 +1,4 @@
-# Maintainer: iiPythonx
+# Maintainer: Ice Year
 _appname=feishin
 pkgname=iipython-feishin-electron-bin
 _pkgname=feishin
