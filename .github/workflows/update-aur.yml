@@ -11,26 +11,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Check if package exists on AUR
-        run: |
-          python - <<'PY'
-          import json
-          import os
-          import urllib.request
+      # - name: Check if package exists on AUR
+      #   run: |
+      #     python - <<'PY'
+      #     import json
+      #     import os
+      #     import urllib.request
 
-          url = "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=iipython-feishin-electron-bin"
-          try:
-              with urllib.request.urlopen(url, timeout=10) as resp:
-                  data = json.load(resp)
-              exists = data.get("resultcount", 0) > 0
-          except Exception as exc:  # noqa: BLE001
-              print(f"AUR lookup failed: {exc}")
-              exists = True
+      #     url = "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=iipython-feishin-electron-bin"
+      #     try:
+      #         with urllib.request.urlopen(url, timeout=10) as resp:
+      #             data = json.load(resp)
+      #         exists = data.get("resultcount", 0) > 0
+      #     except Exception as exc:  # noqa: BLE001
+      #         print(f"AUR lookup failed: {exc}")
+      #         exists = True
 
-          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
-              env_file.write(f"AUR_EXISTS={'1' if exists else '0'}\n")
-          print(f"AUR package present: {exists}")
-          PY
+      #     with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_file:
+      #         env_file.write(f"AUR_EXISTS={'1' if exists else '0'}\n")
+      #     print(f"AUR package present: {exists}")
+      #     PY
       - name: Update PKGBUILD from upstream release
         run: python .github/scripts/update_pkgbuild.py
       - name: Commit changes
@@ -44,7 +44,8 @@ jobs:
         if: env.PKG_UPDATED == '1'
         run: git push
       - name: Publish to AUR
-        if: env.PKG_UPDATED == '1' || env.AUR_EXISTS == '0'
+        # if: env.PKG_UPDATED == '1' || env.AUR_EXISTS == '0'
+        if: env.PKG_UPDATED == '1'
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
         with:
           pkgname: iipython-feishin-electron-bin
