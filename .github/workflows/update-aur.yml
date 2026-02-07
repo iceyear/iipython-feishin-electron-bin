@@ -49,6 +49,8 @@ jobs:
         with:
           pkgname: iipython-feishin-electron-bin
           pkgbuild: ./PKGBUILD
+          assets: |
+            iipython-feishin-electron.sh
           commit_username: github-actions[bot]
           commit_email: github-actions[bot]@users.noreply.github.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
