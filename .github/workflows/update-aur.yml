@@ -46,7 +46,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pkgbuild_tag="$(grep -E '^_tag=' PKGBUILD | head -n1 | cut -d'=' -f2 | tr -d '"')"
+          pkgbuild_upstream_tag="$(grep -E '^_upstream_tag=' PKGBUILD | head -n1 | cut -d'=' -f2 | tr -d '"')"
+          if [[ -z "$pkgbuild_upstream_tag" ]]; then
+            pkgbuild_upstream_tag="$(grep -E '^_tag=' PKGBUILD | head -n1 | cut -d'=' -f2 | tr -d '"')"
+          fi
           if gh release view "$FEISHIN_TAG" >/dev/null 2>&1; then
             echo "exists=1" >> "$GITHUB_OUTPUT"
             exists=1
@@ -54,7 +57,7 @@ jobs:
             echo "exists=0" >> "$GITHUB_OUTPUT"
             exists=0
           fi
-          if [[ "${{ github.event_name }}" == "schedule" ]] && [[ "$UPSTREAM_TAG" == "$pkgbuild_tag" ]]; then
+          if [[ "${{ github.event_name }}" == "schedule" ]] && [[ "$UPSTREAM_TAG" == "$pkgbuild_upstream_tag" ]]; then
             echo "skip=1" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -113,6 +116,7 @@ jobs:
       - name: Update PKGBUILD from release
         env:
           FEISHIN_TAG: ${{ needs.publish-linux.outputs.release_tag }}
+          FEISHIN_UPSTREAM_TAG: ${{ needs.publish-linux.outputs.upstream_tag }}
           FEISHIN_PKGVER: ${{ needs.publish-linux.outputs.pkgver }}
           FEISHIN_ASSETVER: ${{ needs.publish-linux.outputs.assetver }}
         run: python .github/scripts/update_pkgbuild.py

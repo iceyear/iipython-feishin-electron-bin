@@ -45,6 +45,7 @@ def main() -> int:
         handle.write(f"FEISHIN_TAG={release_tag}\n")
         handle.write(f"FEISHIN_PKGVER={pkgver}\n")
         handle.write(f"FEISHIN_ASSETVER={assetver}\n")
+        handle.write(f"FEISHIN_UPSTREAM_TAG={latest_tag}\n")
         handle.write(f"UPSTREAM_TAG={latest_tag}\n")
         handle.write(f"UPSTREAM_REPO={upstream_repo}\n")
 

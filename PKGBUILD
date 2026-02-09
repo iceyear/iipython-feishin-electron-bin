@@ -4,6 +4,7 @@ pkgname=iipython-feishin-electron-bin
 _pkgname=feishin
 pkgver=26.01.22_1.0
 _tag=26.01.22-1.0
+_upstream_tag=26.01.22-1.0
 _assetver=26.01.22
 _electronversion=39
 pkgrel=1

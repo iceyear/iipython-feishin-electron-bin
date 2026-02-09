@@ -30,6 +30,13 @@ def extract_var(content: str, var_name: str) -> str:
     return match.group(1).strip().strip("\"")
 
 
+def extract_optional_var(content: str, var_name: str) -> str | None:
+    match = re.search(rf"^{re.escape(var_name)}=([^\n]+)$", content, re.MULTILINE)
+    if not match:
+        return None
+    return match.group(1).strip().strip("\"")
+
+
 def set_env(key: str, value: str) -> None:
     env_path = os.environ.get("GITHUB_ENV")
     if env_path:
@@ -70,11 +77,13 @@ def detect_electron_major(asset_path: str, appname: str) -> str:
 
 def main() -> int:
     override_tag = os.environ.get("FEISHIN_TAG")
+    override_upstream_tag = os.environ.get("FEISHIN_UPSTREAM_TAG")
     override_pkgver = os.environ.get("FEISHIN_PKGVER")
     override_assetver = os.environ.get("FEISHIN_ASSETVER")
 
     pkgbuild = read_text(PKGBUILD_PATH)
     current_tag = extract_var(pkgbuild, "_tag")
+    current_upstream_tag = extract_optional_var(pkgbuild, "_upstream_tag") or current_tag
     current_pkgver = extract_var(pkgbuild, "pkgver")
     current_assetver = extract_var(pkgbuild, "_assetver")
     current_electron = extract_var(pkgbuild, "_electronversion")
@@ -107,6 +116,7 @@ def main() -> int:
 
     latest_assetver = override_assetver or asset_name.replace("feishin-", "").split("-linux-")[0]
     latest_pkgver = override_pkgver or latest_tag.replace("-", "_")
+    latest_upstream_tag = override_upstream_tag or latest_tag
     with tempfile.TemporaryDirectory() as workdir:
         appimage_path = os.path.join(workdir, asset_name)
         download_file(asset_url, appimage_path)
@@ -114,6 +124,7 @@ def main() -> int:
 
     if (
         latest_tag == current_tag
+        and latest_upstream_tag == current_upstream_tag
         and latest_sha == current_sha
         and latest_assetver == current_assetver
         and latest_electron == current_electron
@@ -125,6 +136,18 @@ def main() -> int:
 
     pkgbuild = re.sub(r"^pkgver=.*$", f"pkgver={latest_pkgver}", pkgbuild, flags=re.MULTILINE)
     pkgbuild = re.sub(r"^_tag=.*$", f"_tag={latest_tag}", pkgbuild, flags=re.MULTILINE)
+    if re.search(r"^_upstream_tag=.*$", pkgbuild, flags=re.MULTILINE):
+        pkgbuild = re.sub(
+            r"^_upstream_tag=.*$",
+            f"_upstream_tag={latest_upstream_tag}",
+            pkgbuild,
+            flags=re.MULTILINE,
+        )
+    else:
+        pkgbuild = pkgbuild.replace(
+            f"_tag={latest_tag}\n",
+            f"_tag={latest_tag}\n_upstream_tag={latest_upstream_tag}\n",
+        )
     pkgbuild = re.sub(r"^_assetver=.*$", f"_assetver={latest_assetver}", pkgbuild, flags=re.MULTILINE)
     pkgbuild = re.sub(
         r"^_electronversion=.*$",
