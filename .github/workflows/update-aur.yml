@@ -120,7 +120,7 @@ jobs:
           cache-dependency-path: upstream/pnpm-lock.yaml
       - name: Install dependencies
         if: steps.release_check.outputs.skip != '1'
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
         working-directory: upstream
       - name: Build Linux packages
         if: steps.release_check.outputs.skip != '1'
