@@ -99,7 +99,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           shopt -s nullglob
-          files=(upstream/dist/*.deb upstream/dist/*.AppImage upstream/dist/*.tar.xz upstream/dist/*.yml upstream/dist/*.blockmap)
+          files=(upstream/dist/*.deb upstream/dist/*.AppImage upstream/dist/*.tar.xz upstream/dist/latest-*.yml upstream/dist/*.blockmap)
           if [ ${#files[@]} -eq 0 ]; then
             echo "No release assets found in upstream/dist"
             exit 1
