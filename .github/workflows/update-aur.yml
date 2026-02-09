@@ -32,7 +32,7 @@ jobs:
       skip: ${{ steps.release_check.outputs.skip }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Resolve upstream release metadata
         id: resolve
         env:
@@ -40,58 +40,7 @@ jobs:
           INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
           INPUT_PKGVER: ${{ inputs.pkgver }}
           INPUT_ASSETVER: ${{ inputs.assetver }}
-        run: |
-          python - <<'PY'
-          import json
-          import os
-          from urllib.request import urlopen
-
-          upstream_repo = "iiPythonx/feishin"
-          tag = os.environ.get("INPUT_TAG") or ""
-          release_tag = os.environ.get("INPUT_RELEASE_TAG") or ""
-          pkgver = os.environ.get("INPUT_PKGVER") or ""
-          assetver = os.environ.get("INPUT_ASSETVER") or ""
-
-          if tag:
-              release_url = f"https://api.github.com/repos/{upstream_repo}/releases/tags/{tag}"
-          else:
-              release_url = f"https://api.github.com/repos/{upstream_repo}/releases/latest"
-
-          with urlopen(release_url, timeout=10) as resp:
-              data = json.load(resp)
-
-            latest_tag = data["tag_name"]
-          assets = data.get("assets", [])
-          asset = next(
-              (item for item in assets if item.get("name", "").endswith("linux-amd64.deb")),
-              None,
-          )
-          if not asset:
-              raise SystemExit("No linux-amd64.deb asset found in upstream release")
-
-          asset_name = asset["name"]
-          derived_assetver = asset_name.replace("feishin-", "").split("-linux-")[0]
-
-            pkgver = pkgver or latest_tag.replace("-", "_")
-          assetver = assetver or derived_assetver
-            release_tag = release_tag or latest_tag
-
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
-              handle.write(f"upstream_tag={latest_tag}\n")
-              handle.write(f"release_tag={release_tag}\n")
-              handle.write(f"pkgver={pkgver}\n")
-              handle.write(f"assetver={assetver}\n")
-
-          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as handle:
-              handle.write(f"FEISHIN_TAG={release_tag}\n")
-              handle.write(f"FEISHIN_PKGVER={pkgver}\n")
-              handle.write(f"FEISHIN_ASSETVER={assetver}\n")
-              handle.write(f"UPSTREAM_TAG={latest_tag}\n")
-              handle.write(f"UPSTREAM_REPO={upstream_repo}\n")
-
-            print(f"Resolved upstream tag: {latest_tag}")
-            print(f"Resolved release tag: {release_tag}")
-          PY
+        run: python .github/scripts/resolve_upstream_release.py
       - name: Check release exists
         id: release_check
         env:
