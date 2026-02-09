@@ -6,6 +6,7 @@ pkgver=26.01.22_1.0
 _tag=26.01.22-1.0
 _upstream_tag=26.01.22-1.0
 _assetver=26.01.22
+_assetname=Feishin-linux-amd64.deb
 _electronversion=39
 pkgrel=1
 pkgdesc="A modern self-hosted music player (iiPythonx build, prebuilt, system-wide electron, lite rolldown-vite build)"
@@ -26,7 +27,7 @@ makedepends=(
 )
 source=("${pkgname%-bin}.sh")
 source_x86_64=(
-    "${pkgname%-bin}-${pkgver}-x86_64.deb::${url}/releases/download/${_tag}/${_appname}-${_assetver}-linux-amd64.deb"
+    "${pkgname%-bin}-${pkgver}-x86_64.deb::${url}/releases/download/${_tag}/${_assetname}"
 )
 sha256sums=('4497d4c2cfb24ca0665cbeabf377a6bc850a8cfd6dd17469b0dc937a9ed6bf65')
 sha256sums_x86_64=('80dc7e2936b4260e703b70ea1a39a7683b1254faf15ff9f2d4e24e85342cb871')

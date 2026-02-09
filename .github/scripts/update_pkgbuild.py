@@ -84,6 +84,7 @@ def main() -> int:
     pkgbuild = read_text(PKGBUILD_PATH)
     current_tag = extract_var(pkgbuild, "_tag")
     current_upstream_tag = extract_optional_var(pkgbuild, "_upstream_tag") or current_tag
+    current_assetname = extract_optional_var(pkgbuild, "_assetname")
     current_pkgver = extract_var(pkgbuild, "pkgver")
     current_assetver = extract_var(pkgbuild, "_assetver")
     current_electron = extract_var(pkgbuild, "_electronversion")
@@ -128,6 +129,7 @@ def main() -> int:
         and latest_sha == current_sha
         and latest_assetver == current_assetver
         and latest_electron == current_electron
+        and (current_assetname == asset_name or current_assetname is None)
     ):
         set_env("PKG_UPDATED", "0")
         set_env("NEW_PKGVER", current_pkgver)
@@ -149,6 +151,18 @@ def main() -> int:
             f"_tag={latest_tag}\n_upstream_tag={latest_upstream_tag}\n",
         )
     pkgbuild = re.sub(r"^_assetver=.*$", f"_assetver={latest_assetver}", pkgbuild, flags=re.MULTILINE)
+    if re.search(r"^_assetname=.*$", pkgbuild, flags=re.MULTILINE):
+        pkgbuild = re.sub(
+            r"^_assetname=.*$",
+            f"_assetname={asset_name}",
+            pkgbuild,
+            flags=re.MULTILINE,
+        )
+    else:
+        pkgbuild = pkgbuild.replace(
+            f"_assetver={latest_assetver}\n",
+            f"_assetver={latest_assetver}\n_assetname={asset_name}\n",
+        )
     pkgbuild = re.sub(
         r"^_electronversion=.*$",
         f"_electronversion={latest_electron}",
@@ -180,7 +194,7 @@ def main() -> int:
     )
     source_line = (
         f"source_x86_64 = iipython-feishin-electron-{latest_pkgver}-x86_64.deb::"
-        f"https://github.com/{REPO}/releases/download/{latest_tag}/feishin-{latest_assetver}-linux-amd64.deb"
+        f"https://github.com/{REPO}/releases/download/{latest_tag}/{asset_name}"
     )
     srcinfo = re.sub(r"^source_x86_64 = .*$", source_line, srcinfo, flags=re.MULTILINE)
     srcinfo = re.sub(
