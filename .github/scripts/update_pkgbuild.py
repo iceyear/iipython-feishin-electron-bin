@@ -9,7 +9,7 @@ from urllib.request import urlopen
 
 PKGBUILD_PATH = "PKGBUILD"
 SRCINFO_PATH = ".SRCINFO"
-REPO = "iiPythonx/feishin"
+REPO = "iceyear/iipython-feishin-electron-bin"
 
 
 def read_text(path: str) -> str:
@@ -41,19 +41,36 @@ def download_file(url: str, dest: str) -> None:
         handle.write(resp.read())
 
 
-def detect_electron_major(appimage_path: str, appname: str) -> str:
-    os.chmod(appimage_path, 0o755)
+def detect_electron_major(asset_path: str, appname: str) -> str:
     with tempfile.TemporaryDirectory() as workdir:
-        subprocess.run([appimage_path, "--appimage-extract"], cwd=workdir, check=True)
-        binary_path = os.path.join(workdir, "squashfs-root", appname)
+        subprocess.run(["ar", "x", asset_path], cwd=workdir, check=True)
+        data_archives = sorted(
+            name for name in os.listdir(workdir) if name.startswith("data.tar.")
+        )
+        if not data_archives:
+            raise RuntimeError("Unable to locate data.tar.* in deb archive")
+        subprocess.run(["bsdtar", "-xf", data_archives[0]], cwd=workdir, check=True)
+        binary_path = os.path.join(workdir, "opt", "Feishin", appname)
+        if not os.path.exists(binary_path):
+            app_dir = f"{appname[:1].upper()}{appname[1:]}"
+            binary_path = os.path.join(workdir, "opt", app_dir, appname)
+        if not os.path.exists(binary_path):
+            for root, _, files in os.walk(os.path.join(workdir, "opt")):
+                if appname in files:
+                    binary_path = os.path.join(root, appname)
+                    break
         output = subprocess.check_output(["strings", binary_path], text=True)
     match = re.search(r"Chrome/[0-9.]* Electron/([0-9]+)", output)
     if not match:
-        raise RuntimeError("Unable to detect Electron major version from AppImage")
+        raise RuntimeError("Unable to detect Electron major version from deb")
     return match.group(1)
 
 
 def main() -> int:
+    override_tag = os.environ.get("FEISHIN_TAG")
+    override_pkgver = os.environ.get("FEISHIN_PKGVER")
+    override_assetver = os.environ.get("FEISHIN_ASSETVER")
+
     pkgbuild = read_text(PKGBUILD_PATH)
     current_tag = extract_var(pkgbuild, "_tag")
     current_pkgver = extract_var(pkgbuild, "pkgver")
@@ -62,17 +79,22 @@ def main() -> int:
     current_appname = extract_var(pkgbuild, "_appname")
     current_sha = extract_var(pkgbuild, "sha256sums_x86_64").strip("'()").split()[0]
 
-    with urlopen(f"https://api.github.com/repos/{REPO}/releases/latest") as resp:
+    if override_tag:
+        release_url = f"https://api.github.com/repos/{REPO}/releases/tags/{override_tag}"
+    else:
+        release_url = f"https://api.github.com/repos/{REPO}/releases/latest"
+
+    with urlopen(release_url) as resp:
         data = json.load(resp)
 
     latest_tag = data["tag_name"]
     assets = data.get("assets", [])
     asset = next(
-        (item for item in assets if item.get("name", "").endswith("linux-x86_64.AppImage")),
+        (item for item in assets if item.get("name", "").endswith("linux-amd64.deb")),
         None,
     )
     if not asset:
-        raise RuntimeError("No linux-x86_64.AppImage asset found in latest release")
+        raise RuntimeError("No linux-amd64.deb asset found in latest release")
 
     asset_name = asset["name"]
     asset_url = asset["browser_download_url"]
@@ -81,8 +103,8 @@ def main() -> int:
         raise RuntimeError("Asset digest missing sha256")
     latest_sha = digest.split("sha256:")[-1]
 
-    latest_assetver = asset_name.replace("feishin-", "").split("-linux-")[0]
-    latest_pkgver = latest_tag.replace("-", "_")
+    latest_assetver = override_assetver or asset_name.replace("feishin-", "").split("-linux-")[0]
+    latest_pkgver = override_pkgver or latest_tag.replace("-", "_")
     with tempfile.TemporaryDirectory() as workdir:
         appimage_path = os.path.join(workdir, asset_name)
         download_file(asset_url, appimage_path)
@@ -132,8 +154,8 @@ def main() -> int:
         flags=re.MULTILINE,
     )
     source_line = (
-        f"source_x86_64 = iipython-feishin-electron-{latest_pkgver}-x86_64.AppImage::"
-        f"https://github.com/{REPO}/releases/download/{latest_tag}/feishin-{latest_assetver}-linux-x86_64.AppImage"
+        f"source_x86_64 = iipython-feishin-electron-{latest_pkgver}-x86_64.deb::"
+        f"https://github.com/{REPO}/releases/download/{latest_tag}/feishin-{latest_assetver}-linux-amd64.deb"
     )
     srcinfo = re.sub(r"^source_x86_64 = .*$", source_line, srcinfo, flags=re.MULTILINE)
     srcinfo = re.sub(
