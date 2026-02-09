@@ -46,12 +46,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          pkgbuild_tag="$(grep -E '^_tag=' PKGBUILD | head -n1 | cut -d'=' -f2 | tr -d '"')"
           if gh release view "$FEISHIN_TAG" >/dev/null 2>&1; then
             echo "exists=1" >> "$GITHUB_OUTPUT"
             exists=1
           else
             echo "exists=0" >> "$GITHUB_OUTPUT"
             exists=0
+          fi
+          if [[ "${{ github.event_name }}" == "schedule" ]] && [[ "$UPSTREAM_TAG" == "$pkgbuild_tag" ]]; then
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           if [[ "${{ github.event_name }}" == "schedule" ]] && [[ "$exists" == "1" ]]; then
             echo "skip=1" >> "$GITHUB_OUTPUT"
