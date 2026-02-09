@@ -22,6 +22,9 @@ conflicts=(
 depends=(
     "electron${_electronversion}"
 )
+optdepends=(
+    'mpv: Alternative audio backend'
+)
 makedepends=(
     'asar'
 )
