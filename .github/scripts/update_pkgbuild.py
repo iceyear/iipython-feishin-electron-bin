@@ -2,6 +2,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -49,7 +50,8 @@ def detect_electron_major(asset_path: str, appname: str) -> str:
         )
         if not data_archives:
             raise RuntimeError("Unable to locate data.tar.* in deb archive")
-        subprocess.run(["bsdtar", "-xf", data_archives[0]], cwd=workdir, check=True)
+        extractor = "bsdtar" if shutil.which("bsdtar") else "tar"
+        subprocess.run([extractor, "-xf", data_archives[0]], cwd=workdir, check=True)
         binary_path = os.path.join(workdir, "opt", "Feishin", appname)
         if not os.path.exists(binary_path):
             app_dir = f"{appname[:1].upper()}{appname[1:]}"
