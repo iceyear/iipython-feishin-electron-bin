@@ -2,8 +2,8 @@
 _appname=feishin
 pkgname=iipython-feishin-electron-bin
 _pkgname=feishin
-pkgver=26.01.22_1.0_3
-_tag=26.01.22-1.0-3
+pkgver=26.01.22_1.0_4
+_tag=26.01.22-1.0_4
 _upstream_tag=26.01.22-1.0
 _assetver=26.01.22
 _assetname=Feishin-linux-amd64.deb
@@ -33,7 +33,7 @@ source_x86_64=(
     "${pkgname%-bin}-${pkgver}-x86_64.deb::${url}/releases/download/${_tag}/${_assetname}"
 )
 sha256sums=('4497d4c2cfb24ca0665cbeabf377a6bc850a8cfd6dd17469b0dc937a9ed6bf65')
-sha256sums_x86_64=('39acafbefebc222569c682045b6c1d86e319335f775a3cc2d5e1352ebafc0ce9')
+sha256sums_x86_64=('622a558fc410a07e37230a402f48f2d34a3840c03350d03fa34e4e07028cf24d')
 
 _get_electron_version() {
     _elec_ver="$(strings "${srcdir}/opt/Feishin/feishin" | grep '^Chrome/[0-9.]* Electron/[0-9]' | cut -d'/' -f3 | cut -d'.' -f1)"
