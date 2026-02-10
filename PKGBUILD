@@ -27,6 +27,8 @@ optdepends=(
 )
 makedepends=(
     'asar'
+    'nodejs'
+    'npm'
 )
 source=("${pkgname%-bin}.sh")
 source_x86_64=(
@@ -60,9 +62,26 @@ prepare() {
         s|Exec=.*|Exec=${pkgname%-bin} %U|g
         s|Icon=.*|Icon=${pkgname%-bin}|g
     " "${srcdir}/usr/share/applications/feishin.desktop"
-    asar e "${srcdir}/opt/Feishin/resources/app.asar" "${srcdir}/app.asar.unpacked"
-    find "${srcdir}/app.asar.unpacked/out" -type f -exec sed -i "s/process.resourcesPath/'\/usr\/lib\/${pkgname%-bin}'/g" {} +
-    asar p "${srcdir}/app.asar.unpacked" "${srcdir}/app.asar"
+    _electron_target="${_elec_ver:-${_electronversion}.0.0}"
+    _asar_src="${srcdir}/app.asar.unpacked"
+    _asar_unpacked="${srcdir}/app.asar.unpacked.runtime"
+    asar e "${srcdir}/opt/Feishin/resources/app.asar" "${_asar_src}"
+    find "${_asar_src}/out" -type f -exec sed -i "s/process.resourcesPath/'\/usr\/lib\/${pkgname%-bin}'/g" {} +
+    mkdir -p "${srcdir}/npm-home" "${_asar_unpacked}"
+    (
+        cd "${_asar_src}"
+        HOME="${srcdir}/npm-home" npm rebuild abstract-socket \
+            --build-from-source \
+            --runtime=electron \
+            --target="${_electron_target}" \
+            --disturl=https://electronjs.org/headers
+    ) || return 1
+    if [[ -d "${_asar_src}/node_modules/abstract-socket/build" ]]; then
+        mkdir -p "${_asar_unpacked}/node_modules/abstract-socket"
+        cp -r "${_asar_src}/node_modules/abstract-socket/build" \
+            "${_asar_unpacked}/node_modules/abstract-socket/"
+    fi
+    asar p "${_asar_src}" "${srcdir}/app.asar"
     if [[ -d "${srcdir}/opt/Feishin/resources/assets" ]]; then
         find "${srcdir}/opt/Feishin/resources/assets" -type d -exec chmod 755 {} +
     fi
@@ -71,6 +90,10 @@ prepare() {
 package() {
     install -Dm755 "${srcdir}/${pkgname%-bin}.sh" "${pkgdir}/usr/bin/${pkgname%-bin}"
     install -Dm644 "${srcdir}/app.asar" -t "${pkgdir}/usr/lib/${pkgname%-bin}"
+    if [[ -d "${srcdir}/app.asar.unpacked.runtime" ]]; then
+        cp -Pr --no-preserve=ownership "${srcdir}/app.asar.unpacked.runtime" \
+            "${pkgdir}/usr/lib/${pkgname%-bin}/app.asar.unpacked"
+    fi
     if [[ -d "${srcdir}/opt/Feishin/resources/assets" ]]; then
         cp -Pr --no-preserve=ownership "${srcdir}/opt/Feishin/resources/assets" "${pkgdir}/usr/lib/${pkgname%-bin}"
     fi
