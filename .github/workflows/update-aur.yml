@@ -85,12 +85,10 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: upstream/pnpm-lock.yaml
-      - name: Approve native build scripts
-        if: steps.release_check.outputs.skip != '1'
-        run: 'pnpm config set allow-builds {"abstract-socket": true, "electron-winstaller": true}'
-        working-directory: upstream
       - name: Install dependencies
         if: steps.release_check.outputs.skip != '1'
+        env:
+          npm_config_dangerously_allow_all_builds: "true"
         run: pnpm install --no-frozen-lockfile
         working-directory: upstream
       - name: Build Linux packages
