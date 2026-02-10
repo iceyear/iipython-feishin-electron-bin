@@ -6,8 +6,6 @@ pkgbase = iipython-feishin-electron-bin
 	arch = x86_64
 	license = GPL-3.0-only
 	makedepends = asar
-	makedepends = nodejs
-	makedepends = npm
 	depends = electron39
 	optdepends = mpv: Alternative audio backend
 	provides = feishin=26.01.22_1.0_3

@@ -23,7 +23,7 @@ def update_electron_builder(path: Path) -> bool:
     original = content
     content = content.replace(
         "asarUnpack:\n    - resources/**\n",
-        "asarUnpack:\n    - resources/**/*.node\n    - resources/**/*.dll\n    - resources/**/*.so\n    - resources/**/*.dylib\n",
+        "asarUnpack:\n    - resources/**/*.node\n    - resources/**/*.dll\n    - resources/**/*.so\n    - resources/**/*.dylib\n    - node_modules/abstract-socket/**\n",
     )
     if "# consider dropping AppImage" not in content:
         content = content.replace(
