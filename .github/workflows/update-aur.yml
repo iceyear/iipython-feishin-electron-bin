@@ -91,7 +91,7 @@ jobs:
           cache-dependency-path: upstream/pnpm-lock.yaml
       - name: Install dependencies
         if: steps.release_check.outputs.skip != '1'
-        run: pnpm install --no-frozen-lockfile
+        run: npm_config_dangerously_allow_all_builds=true pnpm install --no-frozen-lockfile
         working-directory: upstream
       - name: Build Linux packages
         if: steps.release_check.outputs.skip != '1'
