@@ -71,6 +71,10 @@ prepare() {
 package() {
     install -Dm755 "${srcdir}/${pkgname%-bin}.sh" "${pkgdir}/usr/bin/${pkgname%-bin}"
     install -Dm644 "${srcdir}/app.asar" -t "${pkgdir}/usr/lib/${pkgname%-bin}"
+    if [[ -d "${srcdir}/opt/Feishin/resources/app.asar.unpacked" ]]; then
+        cp -Pr --no-preserve=ownership "${srcdir}/opt/Feishin/resources/app.asar.unpacked" \
+            "${pkgdir}/usr/lib/${pkgname%-bin}/app.asar.unpacked"
+    fi
     if [[ -d "${srcdir}/opt/Feishin/resources/assets" ]]; then
         cp -Pr --no-preserve=ownership "${srcdir}/opt/Feishin/resources/assets" "${pkgdir}/usr/lib/${pkgname%-bin}"
     fi
