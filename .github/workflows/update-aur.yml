@@ -6,15 +6,19 @@ on:
       tag:
         description: "Upstream tag to build (e.g. 26.01.22-1.0)"
         required: false
+        default: '26.01.22-1.0'
       release_tag:
         description: "Release tag to create in this repo (e.g. 26.01.22-1.0-custom)"
         required: false
+        default: '26.01.22-1.0_5'
       pkgver:
         description: "PKGVER to use in AUR (e.g. 26.01.22_1.0)"
         required: false
+        default: '26.01.22_1.0_5'
       assetver:
         description: "Asset version for deb names (e.g. 26.01.22)"
         required: false
+        default: '26.01.22'
   schedule:
     - cron: '0 3 * * 0'
 
@@ -87,7 +91,7 @@ jobs:
           cache-dependency-path: upstream/pnpm-lock.yaml
       - name: Install dependencies
         if: steps.release_check.outputs.skip != '1'
-        run: pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
+        run: pnpm config set dangerouslyAllowAllBuilds true && pnpm install --no-frozen-lockfile
         working-directory: upstream
       - name: Build Linux packages
         if: steps.release_check.outputs.skip != '1'
