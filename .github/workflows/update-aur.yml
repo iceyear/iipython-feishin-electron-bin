@@ -91,7 +91,7 @@ jobs:
           cache-dependency-path: upstream/pnpm-lock.yaml
       - name: Install dependencies
         if: steps.release_check.outputs.skip != '1'
-        run: pnpm install --no-frozen-lockfile && pnpm install --no-frozen-lockfile --ignore-scripts=false abstract-socket
+        run: pnpm install --no-frozen-lockfile && pnpm install --ignore-scripts=false abstract-socket --no-frozen-lockfile
         working-directory: upstream
       - name: Build Linux packages
         if: steps.release_check.outputs.skip != '1'
